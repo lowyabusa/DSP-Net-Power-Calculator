@@ -1,0 +1,5 @@
+{
+  "Thermal": { "Efficiency": 0.80, "MaxPowerMw": 2.16 },
+  "MiniFusion": { "Efficiency": 1.00, "MaxPowerMw": 15 },
+  "ArtificialStar": { "Efficiency": 1.00, "MaxPowerMw": 72, "SprayBoostsCapacityOnly": true }
+}

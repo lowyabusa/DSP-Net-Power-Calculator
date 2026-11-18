@@ -1,0 +1,262 @@
+<Window x:Class="DspNetEnergy.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DspNetEnergy.Desktop"
+        Title="DSP Net-Energy" Width="1340" Height="865" MinWidth="1040" MinHeight="625"
+        WindowStartupLocation="CenterScreen" Closing="OnClosing" Style="{StaticResource {x:Type Window}}">
+    <Grid Margin="18,0,18,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="74" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="32" />
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" LastChildFill="False" VerticalAlignment="Center">
+            <Border Width="44" Height="44" CornerRadius="10" Background="{StaticResource SelectionBrush}"
+                    BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" Margin="0,0,12,0">
+                <Path Data="M 15,0 L 4,13 L 11,13 L 7,24 L 21,10 L 13,10 L 18,0 Z"
+                      Fill="{StaticResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="DSP NET-ENERGY" FontSize="24" FontWeight="Bold" />
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                <Button x:Name="EnglishButton" Click="OnLanguageClick" Padding="7,6" Margin="0,0,5,0"
+                        AutomationProperties.Name="{local:Text 'English', 'Englisch'}"
+                        ToolTip="{local:Text 'Switch to English', 'Auf Englisch umschalten'}">
+                    <Canvas Width="20" Height="12" ClipToBounds="True" Background="#012169">
+                        <Path Data="M0,0 L20,12 M20,0 L0,12" Stroke="White" StrokeThickness="3" />
+                        <Path Data="M0,0 L20,12 M20,0 L0,12" Stroke="#C8102E" StrokeThickness="1" />
+                        <Path Data="M10,0 V12 M0,6 H20" Stroke="White" StrokeThickness="4" />
+                        <Path Data="M10,0 V12 M0,6 H20" Stroke="#C8102E" StrokeThickness="2" />
+                    </Canvas>
+                </Button>
+                <Button x:Name="GermanButton" Click="OnLanguageClick" Padding="7,6" Margin="0,0,5,0"
+                        AutomationProperties.Name="{local:Text 'German', 'Deutsch'}"
+                        ToolTip="{local:Text 'Switch to German', 'Auf Deutsch umschalten'}">
+                    <Canvas Width="20" Height="12" Background="#171717">
+                        <Rectangle Width="20" Height="4" Canvas.Top="4" Fill="#DD0000" />
+                        <Rectangle Width="20" Height="4" Canvas.Top="8" Fill="#FFCE00" />
+                    </Canvas>
+                </Button>
+                <Button x:Name="ChineseButton" Click="OnLanguageClick" Padding="7,4"
+                        AutomationProperties.Name="{local:Text 'Simplified Chinese', 'Vereinfachtes Chinesisch'}"
+                        ToolTip="{local:Text 'Switch to Simplified Chinese', 'Auf vereinfachtes Chinesisch umschalten'}">
+                    <TextBlock Text="简" Width="20" TextAlignment="Center" FontSize="12" FontWeight="SemiBold" />
+                </Button>
+            </StackPanel>
+            <Button DockPanel.Dock="Right" Click="OnGameIconsSettings" Margin="8,0,0,0"
+                    VerticalAlignment="Center" Content="{local:Text 'Game icons', 'Spiel-Icons'}" />
+            <Border DockPanel.Dock="Right" Padding="10,5" CornerRadius="6" Background="{StaticResource InsetBrush}"
+                    BorderBrush="{StaticResource OutlineBrush}" BorderThickness="1" VerticalAlignment="Center">
+                <TextBlock Text="{local:Text '●  LOCAL · OFFLINE', '●  LOKAL · OFFLINE'}" Style="{StaticResource Eyebrow}" />
+            </Border>
+        </DockPanel>
+
+        <Border x:Name="GameIconsPanel" Grid.Row="1" Style="{StaticResource Panel}"
+                Padding="12,8" Margin="0,0,0,10" Visibility="Collapsed">
+            <DockPanel LastChildFill="True">
+                <StackPanel x:Name="GameIconsActions" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Click="OnChooseGameFolder" Margin="0,0,5,0"
+                            Content="{local:Text 'Choose game folder', 'Spielordner wählen'}" />
+                    <Button Click="OnSearchSteam" Margin="0,0,5,0"
+                            Content="{local:Text 'Search Steam', 'Über Steam suchen'}" />
+                    <Button Click="OnSkipGameIcons"
+                            Content="{local:Text 'Continue without icons', 'Ohne Icons weiter'}" />
+                </StackPanel>
+                <TextBlock x:Name="GameIconsStatus" Margin="0,0,12,0" VerticalAlignment="Center"
+                           TextWrapping="Wrap" Style="{StaticResource MutedText}" />
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="224" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="298" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource Panel}" Padding="14">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <TextBlock Text="{local:Text '01 / INVENTORY', '01 / INVENTAR'}" Style="{StaticResource Eyebrow}" />
+                        <TextBlock Text="{local:Text 'Fuel', 'Brennstoff'}" Style="{StaticResource SectionTitle}" Margin="0,6,0,2" />
+                        <TextBlock Text="{local:Text 'Select an item icon', 'Item-Icon anklicken'}" Style="{StaticResource MutedText}" />
+                        <UniformGrid x:Name="FuelTiles" Columns="3" Margin="0,12,0,8" />
+                        <Button Content="{local:Text 'All fuels  ›', 'Alle Brennstoffe  ›'}" Click="OnFuelPicker" HorizontalContentAlignment="Left" />
+                        <Border Height="1" Background="{StaticResource OutlineBrush}" Margin="0,17,0,14" />
+                        <TextBlock Text="{local:Text 'Proliferator', 'Proliferator'}" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="{local:Text 'Tier for this scenario', 'Stufe für dieses Szenario'}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+                        <UniformGrid x:Name="TierTiles" Columns="4" Margin="0,10,0,10" />
+                        <CheckBox x:Name="SprayFuelBox" Content="{local:Text 'Spray fuel', 'Brennstoff besprühen'}" Margin="0,0,0,9"
+                                  Checked="OnSettingsChanged" Unchecked="OnSettingsChanged" />
+                        <CheckBox x:Name="SelfSprayBox" Content="{local:Text 'Self-spray Proliferator', 'Proliferator selbst besprühen'}"
+                                  Checked="OnSettingsChanged" Unchecked="OnSettingsChanged" />
+                        <Border Background="{StaticResource InsetBrush}" CornerRadius="8" Padding="10" Margin="0,15,0,0">
+                            <TextBlock x:Name="SprayNote" Style="{StaticResource MutedText}" />
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="0,0,2,1">
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <DockPanel LastChildFill="False">
+                                <TextBlock Text="{local:Text '02 / SCENARIO', '02 / SZENARIO'}" Style="{StaticResource Eyebrow}" VerticalAlignment="Center" />
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button Content="{local:Text 'Import JSON', 'JSON importieren'}" Click="OnImportScenario" Margin="0,0,5,0" />
+                                    <Button x:Name="ExportButton" Content="{local:Text 'Export JSON', 'JSON exportieren'}" Click="OnExportScenario" IsEnabled="False" />
+                                </StackPanel>
+                            </DockPanel>
+                            <TextBlock x:Name="ScenarioTitle" Style="{StaticResource SectionTitle}" Margin="0,5,0,12" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="0.85*" />
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="1.15*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <Label Content="{local:Text 'Target throughput (items/min)', 'Zieldurchsatz (Stück/min)'}" Target="{Binding ElementName=RateBox}"
+                                           Foreground="{StaticResource MutedBrush}" Padding="0,0,0,5" />
+                                    <TextBox x:Name="RateBox" TextChanged="OnSettingsChanged" FontSize="17"
+                                             AutomationProperties.Name="{local:Text 'Target throughput in items per minute', 'Zieldurchsatz in Stück pro Minute'}" />
+                                </StackPanel>
+                                <ContentControl x:Name="GeneratorTile" Grid.Column="2" VerticalContentAlignment="Stretch"
+                                                HorizontalContentAlignment="Stretch" />
+                            </Grid>
+                            <Expander x:Name="AdvancedSettings" Header="{local:Text 'Advanced scenario settings', 'Erweiterte Szenarioeinstellungen'}" Margin="0,11,0,0">
+                                <Grid Margin="0,10,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="12" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{local:Text 'Power plants · blank = automatic', 'Kraftwerke · leer = automatisch'}" Style="{StaticResource MutedText}" Margin="0,0,0,4" />
+                                        <TextBox x:Name="GeneratorCountBox" TextChanged="OnSettingsChanged" AutomationProperties.Name="{local:Text 'Power plant count', 'Anzahl Kraftwerke'}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock x:Name="InfrastructureLabel" Style="{StaticResource MutedText}" Margin="0,0,0,4" />
+                                        <TextBox x:Name="InfrastructureBox" TextChanged="OnSettingsChanged" AutomationProperties.Name="{local:Text 'Other infrastructure in megawatts', 'Weitere Infrastruktur in Megawatt'}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Margin="0,8,0,0">
+                                        <TextBlock Text="{local:Text 'Spray Coaters · blank = automatic', 'Spray Coater · leer = automatisch'}" Style="{StaticResource MutedText}" Margin="0,0,0,4" />
+                                        <TextBox x:Name="CoaterCountBox" TextChanged="OnSettingsChanged" AutomationProperties.Name="{local:Text 'Spray Coater count', 'Anzahl Spray Coater'}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,8,0,0">
+                                        <TextBlock Text="{local:Text 'Throughput per Coater (items/min)', 'Durchsatz je Coater (Stück/min)'}" Style="{StaticResource MutedText}" Margin="0,0,0,4" />
+                                        <TextBox x:Name="CoaterRateBox" TextChanged="OnSettingsChanged" AutomationProperties.Name="{local:Text 'Throughput per Spray Coater', 'Durchsatz je Spray Coater'}" />
+                                    </StackPanel>
+                                    <Button Grid.Row="2" Grid.ColumnSpan="3" Content="{local:Text 'Edit logistics costs  ›', 'Logistikkosten bearbeiten  ›'}"
+                                            HorizontalContentAlignment="Left" Margin="0,10,0,0" Click="OnEditLogistics" />
+                                </Grid>
+                            </Expander>
+                            <TextBlock x:Name="ScenarioError" Foreground="{StaticResource ErrorBrush}" Margin="0,8,0,0" Visibility="Collapsed" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Panel}" Margin="0,12,0,0">
+                        <Expander x:Name="RouteComparisonPanel" Header="{local:Text 'Alternative recipe chains', 'Alternative Rezeptketten'}"
+                                  Expanded="OnRouteComparisonChanged" Collapsed="OnRouteComparisonChanged">
+                            <StackPanel Margin="0,8,0,0">
+                                <TextBlock Text="{local:Text 'Same fuel throughput and factory settings · ranked by net output', 'Gleicher Brennstoffdurchsatz und gleiche Fabrikparameter · nach Nettoleistung sortiert'}"
+                                           Style="{StaticResource MutedText}" />
+                                <TextBlock x:Name="RouteSummary" Style="{StaticResource MutedText}" Margin="0,4,0,8" />
+                                <StackPanel x:Name="RouteRows" />
+                            </StackPanel>
+                        </Expander>
+                    </Border>
+
+                    <Border Style="{StaticResource Panel}" Margin="0,12,0,0">
+                        <StackPanel>
+                            <DockPanel LastChildFill="False">
+                                <TextBlock Text="{local:Text 'Production chain', 'Produktionskette'}" Style="{StaticResource SectionTitle}" />
+                                <TextBlock x:Name="StepCount" DockPanel.Dock="Right" Style="{StaticResource Eyebrow}" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <TextBlock Text="{local:Text 'Click an icon to choose an option. Right-click a step for settings.', 'Icons öffnen die Auswahl. Rechtsklick zeigt die Einstellungen eines Schritts.'}"
+                                       Style="{StaticResource MutedText}" Margin="0,3,0,10" />
+                            <ContentControl x:Name="FlowOverview" HorizontalContentAlignment="Stretch" />
+                            <StackPanel x:Name="ChainRows" Margin="0,9,0,0" />
+                            <Expander x:Name="MaterialExpander" Header="{local:Text 'Show material balance', 'Stoffbilanz anzeigen'}" Margin="0,9,0,0">
+                                <StackPanel x:Name="MaterialRows" Margin="0,8,0,0" />
+                            </Expander>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Panel}" Margin="0,12,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{local:Text 'Coal / Energetic Graphite · 120 Coal/min', 'Kohle / Graphit · 120 Kohle/min'}" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="{local:Text 'MW · excluding mining, Sorters, and logistics', 'MW · ohne Bergbau, Sorter und Logistik'}" Style="{StaticResource MutedText}" Margin="0,2,0,10" />
+                            <StackPanel x:Name="ReferenceChart" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Panel}" Margin="0,12,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{local:Text 'Proliferator comparison', 'Proliferator-Vergleich'}" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="{local:Text 'Net output at the same target throughput and factory settings', 'Nettoleistung bei gleichem Zieldurchsatz und gleichen Anlagen'}" Style="{StaticResource MutedText}" Margin="0,2,0,10" />
+                            <StackPanel x:Name="VariantRows" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <ContentControl x:Name="InspectorHost" Grid.Column="2" Panel.ZIndex="2" Visibility="Collapsed"
+                            VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" />
+
+            <Border Grid.Column="4" Style="{StaticResource Panel}" Padding="14">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <TextBlock Text="{local:Text '03 / ENERGY BALANCE', '03 / ENERGIEBILANZ'}" Style="{StaticResource Eyebrow}" />
+                        <Border Margin="0,13,0,10" Background="{StaticResource SelectionBrush}" Padding="13,10" CornerRadius="8"
+                                BorderBrush="{StaticResource AccentBrush}" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="{local:Text 'NET MW', 'NETTO MW'}" Style="{StaticResource Eyebrow}" />
+                                <TextBlock x:Name="NetValue" FontFamily="Consolas" FontSize="34" FontWeight="Bold"
+                                           Foreground="{StaticResource AccentBrush}" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <UniformGrid Columns="2">
+                            <Border Background="{StaticResource InsetBrush}" Padding="10" CornerRadius="8" Margin="0,0,4,0">
+                                <StackPanel>
+                                    <TextBlock Text="{local:Text 'Gross MW', 'Brutto MW'}" Style="{StaticResource MutedText}" />
+                                    <TextBlock x:Name="GrossValue" FontFamily="Consolas" FontSize="19" Margin="0,3,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <Border Background="{StaticResource InsetBrush}" Padding="10" CornerRadius="8" Margin="4,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="{local:Text 'Use MW', 'Verbrauch MW'}" Style="{StaticResource MutedText}" />
+                                    <TextBlock x:Name="UseValue" FontFamily="Consolas" FontSize="19" Margin="0,3,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+                        <TextBlock Text="{local:Text 'Consumption by category', 'Verbrauch nach Kategorie'}" FontWeight="SemiBold" Margin="0,17,0,5" />
+                        <StackPanel x:Name="CostRows" />
+                        <Border Height="1" Background="{StaticResource OutlineBrush}" Margin="0,12,0,11" />
+                        <StackPanel x:Name="GenerationRows" />
+                        <Border Background="{StaticResource InsetBrush}" Padding="10" CornerRadius="7" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="{local:Text 'Calculation scope', 'Bilanzgrenze'}" FontWeight="SemiBold" Margin="0,0,0,3" />
+                                <TextBlock x:Name="BoundaryNote" Style="{StaticResource MutedText}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+        <DockPanel Grid.Row="3" LastChildFill="False" VerticalAlignment="Center">
+            <TextBlock x:Name="StatusText" Style="{StaticResource MutedText}" />
+            <TextBlock DockPanel.Dock="Right" Text="{local:Text 'Data 0.10.29.21950 · DSP cross-check 0.10.35.29151', 'Daten 0.10.29.21950 · DSP-Abgleich 0.10.35.29151'}"
+                       ToolTip="{local:Text 'FactorioLab source data and the DSP version used for cross-checking. See the README.', 'FactorioLab-Basisdaten und per Patchnotes geprüfter DSP-Stand. Details in der README.'}"
+                       Style="{StaticResource MutedText}" />
+        </DockPanel>
+    </Grid>
+</Window>

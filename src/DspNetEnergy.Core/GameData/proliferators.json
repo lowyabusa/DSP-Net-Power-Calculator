@@ -1,0 +1,5 @@
+{
+  "MkI": { "ItemId": "proliferator-1", "ExtraProductsMultiplier": 1.125, "SpeedMultiplier": 1.25, "WorkingPowerMultiplier": 1.30, "SpraysPerUnit": 12, "SelfSprayedCapacity": 13 },
+  "MkII": { "ItemId": "proliferator-2", "ExtraProductsMultiplier": 1.20, "SpeedMultiplier": 1.50, "WorkingPowerMultiplier": 1.70, "SpraysPerUnit": 24, "SelfSprayedCapacity": 28 },
+  "MkIII": { "ItemId": "proliferator-3", "ExtraProductsMultiplier": 1.25, "SpeedMultiplier": 2.00, "WorkingPowerMultiplier": 2.50, "SpraysPerUnit": 60, "SelfSprayedCapacity": 75 }
+}

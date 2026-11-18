@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/DspNetEnergy.Core/DspNetEnergy.Core.csproj" />
+  <Project Path="src/DspNetEnergy.Desktop/DspNetEnergy.Desktop.csproj" />
+  <Project Path="src/DspNetEnergy.Web/DspNetEnergy.Web.csproj" />
+  <Project Path="tests/DspNetEnergy.Tests/DspNetEnergy.Tests.csproj" />
+</Solution>

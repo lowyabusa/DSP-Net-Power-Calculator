@@ -1,0 +1,23 @@
+{
+  "advanced-mining-machine": {"Speed":12,"WorkingPowerMw":2.94,"IdlePowerMw":0.168},
+  "arc-smelter": {"Speed":1,"WorkingPowerMw":0.36,"IdlePowerMw":0.012},
+  "assembling-machine-1": {"Speed":0.75,"WorkingPowerMw":0.27,"IdlePowerMw":0.012},
+  "assembling-machine-2": {"Speed":1,"WorkingPowerMw":0.54,"IdlePowerMw":0.018},
+  "assembling-machine-3": {"Speed":1.5,"WorkingPowerMw":1.08,"IdlePowerMw":0.024},
+  "chemical-plant": {"Speed":1,"WorkingPowerMw":0.72,"IdlePowerMw":0.024},
+  "df-negentropy-smelter": {"Speed":3,"WorkingPowerMw":2.88,"IdlePowerMw":0.096},
+  "df-recomposing-assembler": {"Speed":3,"WorkingPowerMw":2.7,"IdlePowerMw":0.054},
+  "fractionator": {"Speed":30,"WorkingPowerMw":0.72,"IdlePowerMw":0.018},
+  "miniature-particle-collider": {"Speed":1,"WorkingPowerMw":12.0,"IdlePowerMw":0.12},
+  "mining-machine": {"Speed":6,"WorkingPowerMw":0.42,"IdlePowerMw":0.024},
+  "oil-extractor": {"Speed":1,"WorkingPowerMw":0.84,"IdlePowerMw":0.024},
+  "oil-refinery": {"Speed":1,"WorkingPowerMw":0.96,"IdlePowerMw":0.024},
+  "orbital-collector": {"Speed":1,"WorkingPowerMw":0.0,"IdlePowerMw":0.0},
+  "plane-smelter": {"Speed":2,"WorkingPowerMw":1.44,"IdlePowerMw":0.048},
+  "quantum-chemical-plant": {"Speed":2,"WorkingPowerMw":2.16,"IdlePowerMw":0.036},
+  "ray-receiver": {"Speed":1,"WorkingPowerMw":0.0,"IdlePowerMw":0.0},
+  "ray-receiver-dark-fog": {"Speed":1,"WorkingPowerMw":0.0,"IdlePowerMw":0.0},
+  "ray-receiver-pro": {"Speed":1,"WorkingPowerMw":0.0,"IdlePowerMw":0.0},
+  "spray-coater": {"Speed":1,"WorkingPowerMw":0.09,"IdlePowerMw":0.0045},
+  "water-pump": {"Speed":1,"WorkingPowerMw":0.3,"IdlePowerMw":0.012}
+}

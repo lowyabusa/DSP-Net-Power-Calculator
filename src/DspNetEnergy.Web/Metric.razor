@@ -1,0 +1,7 @@
+<div class="metric"><span>@Label</span><strong class="@Tone">@Value</strong></div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+    [Parameter] public string? Tone { get; set; }
+}

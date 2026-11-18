@@ -1,0 +1,43 @@
+name: Blazor WebAssembly checks
+
+on:
+  push:
+    branches: ["port/blazor-wasm", "main"]
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".github/workflows/blazor-checks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  existing-tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - run: dotnet build DspNetEnergy.slnx -c Release
+      - run: dotnet test DspNetEnergy.slnx -c Release --no-build
+
+  browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: dotnet publish src/DspNetEnergy.Web -c Release -p:DspBrowserTests=true
+      - run: dotnet run --project tests/DspNetEnergy.WebParity -c Release -- "${{ github.workspace }}/tests/browser/native-parity.json"
+      - run: npm install --no-audit --no-fund
+        working-directory: tests/browser
+      - run: npx playwright install --with-deps chromium
+        working-directory: tests/browser
+      - run: npm test
+        working-directory: tests/browser

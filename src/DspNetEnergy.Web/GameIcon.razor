@@ -1,0 +1,19 @@
+@if (Id is null)
+{
+    <span class="game-icon" aria-hidden="true">@Glyph</span>
+}
+else if (IconImages.GetValueOrDefault(Id) is { } image)
+{
+    <span class="game-icon"><img src="@image" alt="@Name(Id)" />@if (Badge(Id) is { } badge) { <small>@badge</small> }</span>
+}
+else if (Fallback)
+{
+    <span class="game-icon text-icon">@Name(Id)</span>
+}
+
+@code {
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public string Glyph { get; set; } = "—";
+    [Parameter] public bool Fallback { get; set; } = true;
+    internal static Dictionary<string, string> IconImages { get; } = new();
+}

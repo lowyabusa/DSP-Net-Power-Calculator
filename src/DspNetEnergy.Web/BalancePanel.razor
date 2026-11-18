@@ -1,0 +1,113 @@
+<aside>
+    <section class="net">
+        <small>@T("NET OUTPUT", "NETTOLEISTUNG")</small>
+        <div id="net-power" class="net-number @(Balance?.Energy.NetPowerMw < 0m ? "error" : "accent")">@(Balance is null ? "—" : Power(Balance.Energy.NetPowerMw)) <small>MW</small></div>
+        <div class="row">
+            <div><small>@T("Gross output", "Bruttoleistung")</small><br />@(Balance is null ? "—" : Power(Balance.Energy.GrossPowerMw)) MW</div>
+            <div><small>@T("Consumption", "Verbrauch")</small><br />@(Balance is null ? "—" : Power(Balance.Energy.TotalConsumptionMw)) MW</div>
+        </div>
+    </section>
+    <section>
+        <h2>@T("Consumption breakdown", "Verbrauchsaufteilung")</h2>
+        @if (Balance is { } balance)
+        {
+            var cost = balance.Consumption;
+            <Metric Label="@T("Resource extraction", "Rohstoffgewinnung")" Value="@Mw(cost.ResourceExtractionMw)" />
+            <Metric Label="@T("Fuel production", "Brennstoffproduktion")" Value="@Mw(cost.FuelProductionMw)" />
+            <Metric Label="@T("Proliferator production", "Proliferator-Herstellung")" Value="@Mw(cost.ProliferatorProductionMw)" />
+            <Metric Label="@T("Spraying and logistics", "Sprühtechnik und Logistik")" Value="@Mw(cost.SprayAndLogisticsMw)" />
+            <Metric Label="@T("Idle power", "Leerlauf")" Value="@Mw(cost.IdleMw)" />
+            @if (balance.Logistics is not null)
+            {
+                <details><summary>@T("Logistics cost details", "Logistikkosten im Detail")</summary>
+                    @foreach (var (label, power) in LogisticsRows(balance.Logistics))
+                    {
+                        if (power is not null)
+                        {
+                            <Metric Label="@label" Value="@Mw(power.WorkingMw + power.IdleMw)" />
+                            if (power.IdleMw > 0m)
+                            {
+                                <Metric Label="@T("↳ of which idle", "↳ davon Leerlauf")" Value="@Mw(power.IdleMw)" />
+                            }
+                        }
+                    }
+                    @if (Infrastructure is decimal additional)
+                    {
+                        <Metric Label="@T("Additional infrastructure", "Zusätzliche Infrastruktur")" Value="@Mw(additional)" />
+                    }
+                </details>
+            }
+            else if (Infrastructure is decimal infrastructure)
+            {
+                <Metric Label="@T("↳ Infrastructure total", "↳ Infrastruktur pauschal")" Value="@Mw(infrastructure)" />
+            }
+        }
+    </section>
+    <section>
+        <h2>@T("Generation", "Erzeugung")</h2>
+        @if (Balance is { } generation)
+        {
+            var energy = generation.Energy;
+            <Metric Label="@T("Installed power plants", "Installierte Kraftwerke")" Value="@energy.GeneratorCount.ToString(Culture)" />
+            <Metric Label="@T("Installed capacity", "Installierte Leistung")" Value="@Mw(energy.GeneratorCapacityMw)" />
+            <Metric Label="@T("Potential output", "Potenzielle Erzeugung")" Value="@Mw(energy.PotentialElectricPowerMw)" />
+            <Metric Label="@T("Energy per item", "Brennwert je Stück")" Value="@(Precise(energy.FuelEnergyMjPerItem) + " MJ")" />
+            <Metric Label="@T("Fuel burned", "Verbrannter Brennstoff")" Value="@(Amount(energy.BurnedFuelPerMinute) + " /min")" />
+            @if (energy.UnburnedFuelPerMinute > 0m)
+            {
+                <Metric Label="@T("Unburned fuel", "Unverbrannter Brennstoff")" Value="@(Amount(energy.UnburnedFuelPerMinute) + " /min")" Tone="warning" />
+            }
+            @if (generation.ExternalDysonPowerMw > 0m)
+            {
+                <Metric Label="@T("External Dyson Sphere power", "Externe Dyson-Energie")" Value="@Mw(generation.ExternalDysonPowerMw)" Tone="blue" />
+            }
+        }
+    </section>
+    <section>
+        <h2>@T("Calculation scope", "Bilanzgrenze")</h2>
+        @if (Balance is null)
+        {
+            <p class="muted">@T("The energy balance appears once the scenario is valid.", "Die Bilanz erscheint nach einer gültigen Berechnung.")</p>
+        }
+        else if (Exclusions().ToArray() is { Length: > 0 } exclusions)
+        {
+            <p class="warning">@T("Excluded", "Ausgeschlossen")</p>
+            <ul class="warning">@foreach (var exclusion in exclusions) { <li>@exclusion</li> }</ul>
+        }
+        else
+        {
+            <p class="muted">@T("All configured consumption categories are included.", "Alle konfigurierten Verbrauchskategorien sind enthalten.")</p>
+        }
+    </section>
+</aside>
+
+@code {
+    [Parameter] public ProductionChainBalance? Balance { get; set; }
+    [Parameter] public decimal? Infrastructure { get; set; }
+
+    private static string Mw(decimal power) => Precise(power) + " MW";
+    private static (string, LogisticsPower?)[] LogisticsRows(LogisticsBalance costs) =>
+        [(T("Sorters", "Sorter"), costs.Sorters), (T("Logistics Stations", "Logistikstationen"), costs.Stations),
+         (T("Logistics Drones", "Frachtdrohnen"), costs.Drones), (T("Logistics Vessels", "Logistikschiffe"), costs.Vessels)];
+
+    private IEnumerable<string> Exclusions()
+    {
+        if (Balance is not { } balance) yield break;
+        if (balance.Logistics is { } logistics)
+        {
+            foreach (var (label, power) in LogisticsRows(logistics))
+                if (power is null) yield return label;
+        }
+        else if (balance.Energy.ExcludedCosts.HasFlag(ExcludedCosts.SortersAndLogistics))
+        {
+            yield return T("Sorters and other logistics", "Sorter und weitere Logistik");
+        }
+
+        if (balance.Energy.ExcludedCosts.HasFlag(ExcludedCosts.SuppliedMaterials))
+        {
+            string materials = string.Join(", ", balance.Materials.Where(pair => pair.Value.SuppliedPerMinute > 0m)
+                .Select(pair => Name(pair.Key)).Order(StringComparer.Create(Culture, true)));
+            yield return $"{T("Upstream production for", "Vorketten für")} {materials}";
+        }
+    }
+}

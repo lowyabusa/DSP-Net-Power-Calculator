@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DspNetEnergy.Tests" />
+    <EmbeddedResource Include="GameData/*.json;GameData/FactorioLab.LICENSE.txt" />
+  </ItemGroup>
+</Project>

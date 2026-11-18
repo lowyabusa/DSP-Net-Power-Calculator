@@ -1,0 +1,11 @@
+{
+  "id": "./",
+  "name": "DSP Net-Energy Calculator",
+  "short_name": "DSP Net-Energy",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a111b",
+  "theme_color": "#0a111b",
+  "icons": [{ "src": "calculator.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

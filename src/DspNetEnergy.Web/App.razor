@@ -1,0 +1,387 @@
+@inject IJSRuntime JS
+
+<main>
+    <header>
+        <div class="brand"><img src="calculator.svg" alt="" /><h1>DSP NET-ENERGY</h1></div>
+        <nav aria-label="@T("Language", "Sprache")">
+            <button aria-pressed="@(Current.Selected == AppLanguage.English)" @onclick="() => SelectLanguage(AppLanguage.English)" title="@T("Switch to English", "Auf Englisch umschalten")" aria-label="@T("English", "Englisch")"><span aria-hidden="true" class="flag flag-en"></span></button>
+            <button aria-pressed="@(Current.Selected == AppLanguage.German)" @onclick="() => SelectLanguage(AppLanguage.German)" title="@T("Switch to German", "Auf Deutsch umschalten")" aria-label="@T("German", "Deutsch")"><span aria-hidden="true" class="flag flag-de"></span></button>
+            <button aria-pressed="@(Current.Selected == AppLanguage.Chinese)" @onclick="() => SelectLanguage(AppLanguage.Chinese)" title="@T("Switch to Simplified Chinese", "Auf vereinfachtes Chinesisch umschalten")" aria-label="@T("Simplified Chinese", "Vereinfachtes Chinesisch")">简</button>
+            <button aria-expanded="@ShowIcons" @onclick="() => ShowIcons = !ShowIcons">@T("Game icons", "Spiel-Icons")</button>
+        </nav>
+    </header>
+    @if (!ready)
+    {
+        <p role="status">@T("Loading scenario…", "Szenario wird geladen…")</p>
+    }
+    else
+    {
+        @if (ShowIcons)
+        {
+            <section class="icon-panel">
+                <div>
+                    <h2>@T("Game icons", "Spiel-Icons")</h2>
+                    <p>@T("In Steam, open Dyson Sphere Program → Manage → Browse local files. Select that installation folder here.",
+                         "Öffne in Steam Dyson Sphere Program → Verwalten → Lokale Dateien durchsuchen. Wähle hier diesen Installationsordner.")</p>
+                    @if (IconStatus is not null) { <p role="status">@IconStatus</p> }
+                </div>
+                <div class="actions">
+                    <label class="button file">@T("Choose game folder", "Spielordner wählen")<input id="game-folder" type="file" webkitdirectory multiple disabled="@ReadingIcons" @onchange="LoadIcons" /></label>
+                    <a class="button" href="steam://nav/games/details/1366540" title="@T("Steam library", "Steam-Bibliothek")">Steam</a>
+                    <button disabled="@ReadingIcons" @onclick="SkipIcons">@T("Continue without icons", "Ohne Icons fortfahren")</button>
+                </div>
+            </section>
+        }
+        <div class="columns">
+            <aside>
+                <section>
+                    <h2>@T("Fuel", "Brennstoff")</h2><small>@T("Select an item icon", "Item-Icon anklicken")</small>
+                    <div class="tiles">
+                        @foreach (var fuel in ProductionCatalog.Fuels.Take(5).Append(Fuel).Distinct())
+                        {
+                            <button title="@FuelTip(fuel)" aria-pressed="@(fuel.Kind == Settings.Fuel)" @onclick="() => SelectFuel(fuel.Kind)">
+                                <GameIcon Id="@fuel.ItemId" />
+                            </button>
+                        }
+                    </div>
+                    <button @onclick="OpenFuelPicker">@T("All fuels  ›", "Alle Brennstoffe  ›")</button>
+                </section>
+                <section>
+                    <h2>@T("Proliferator", "Proliferator")</h2><small>@T("Tier for this scenario", "Stufe für dieses Szenario")</small>
+                    <div class="tiles tiers">
+                        @foreach (var tier in Tiers)
+                        {
+                            <button title="@TierTip(tier)" aria-pressed="@(tier == Settings.Tier)" @onclick="() => SelectTier(tier)">
+                                <GameIcon Id="@TierIcon(tier)" Glyph="∅" /><small>@TierName(tier)</small>
+                            </button>
+                        }
+                    </div>
+                    <label title="@(Settings.Tier.HasValue ? T("Sprays are counted only for fuel that is burned.", "Nur verbrannter Brennstoff verbraucht Sprühladungen.") : T("Select a Proliferator tier first.", "Wähle zuerst eine Proliferator-Stufe."))">
+                        <input type="checkbox" checked="@Settings.SprayFuel" disabled="@(!Settings.Tier.HasValue)" @onchange="e => Update(Settings with { SprayFuel = e.Value is true })" /> @T("Spray fuel", "Brennstoff besprühen")
+                    </label>
+                    <label title="@T("One spray coats each unit of Proliferator. The remaining charges are available for other items.", "Eine Ladung besprüht die Proliferator-Einheit selbst. Die übrigen Ladungen stehen für andere Items zur Verfügung.")">
+                        <input type="checkbox" checked="@Settings.SelfSpray" disabled="@(!Settings.Tier.HasValue)" @onchange="e => Update(Settings with { SelfSpray = e.Value is true })" /> @T("Self-spray Proliferator", "Proliferator selbst besprühen")
+                    </label>
+                    @if (Balance?.Spray is { } spray)
+                    {
+                        <p class="muted">@spray.UsableSpraysPerUnit @T("sprays per item", "Sprühvorgänge je Einheit")<br />
+                            @Precise(spray.ProliferatorUnitsPerMinute) @T("Proliferator items/min", "Proliferator-Einheiten/min")<br />
+                            @spray.CoaterCount @T("Spray Coaters", "Sprühbeschichter") · @Percent(spray.CoaterUtilization) @T("utilization", "Auslastung")</p>
+                    }
+                    else if (Balance is not null)
+                    {
+                        <p class="muted">@T("No Proliferator is active. The balance uses the unsprayed production chain.", "Keine Proliferation aktiv. Der Rechenkern bilanziert die unbesprühte Kette.")</p>
+                    }
+                </section>
+            </aside>
+            <div>
+                <section>
+                    <div class="row">
+                        <small>@T("SCENARIO", "SZENARIO")</small>
+                        <div class="actions">
+                            <label class="button file">@T("Import JSON", "JSON importieren")<InputFile id="import-scenario" OnChange="Import" accept=".json,application/json" /></label>
+                            <button disabled="@(Balance is null)" @onclick="Export">@T("Export JSON", "JSON exportieren")</button>
+                        </div>
+                    </div>
+                    <h2>@Name(Fuel.ItemId)</h2>
+                    <div class="row">
+                        @Field("rate", T("Target throughput", "Zieldurchsatz") + " /min")
+                        <button class="tile" title="@GeneratorTip" @onclick="FocusGenerator"><GameIcon Id="@Fuel.GeneratorIconId" Fallback="false" /><span>@Name(Fuel.GeneratorIconId)<small>@T("Assigned automatically", "Automatisch zugeordnet")</small></span></button>
+                    </div>
+                    <details id="advanced">
+                        <summary>@T("Advanced scenario settings", "Erweiterte Szenarioeinstellungen")</summary>
+                        <div class="fields">
+                            @Field("plants", T("Power plant count", "Anzahl Kraftwerke"))
+                            @Field("infrastructure", Settings.Logistics is null ? T("Infrastructure total (MW)", "Infrastruktur pauschal (MW)") : T("Additional infrastructure (MW)", "Zusätzliche Infrastruktur (MW)"))
+                            @Field("coaters", T("Spray Coater count", "Anzahl Spray Coater"), !Settings.Tier.HasValue)
+                            @Field("coater-rate", T("Throughput per Spray Coater", "Durchsatz je Spray Coater"), !Settings.Tier.HasValue)
+                        </div>
+                        @AdvancedControls
+                    </details>
+                    @if (Failure is not null)
+                    {
+                        <p class="error" role="alert">@Failure</p>
+                    }
+                </section>
+                @ChainContent
+                <section>
+                    <h2>@T("Coal / Energetic Graphite · 120 Coal/min", "Kohle / Graphit · 120 Kohle/min")</h2>
+                    @Chart(T("Direct Coal", "Kohle direkt"), Coal.NetPowerMw, "blue")
+                    @Chart(Name("energetic-graphite"), Graphite.NetPowerMw, "accent")
+                    <div class="ticks"><span>0 MW</span><span>2 MW</span><span>4 MW</span><span>6 MW</span></div>
+                    <p class="accent">@T("Graphite advantage", "Graphitvorteil") @( (Graphite.NetPowerMw - Coal.NetPowerMw).ToString("+0.00;-0.00;0.00", Culture)) MW</p>
+                </section>
+                <section>
+                    <h2>@T("Proliferator comparison", "Proliferator-Vergleich")</h2>
+                    @if (InvalidField is not null)
+                    {
+                        <p>@T("Correct the scenario input to compare variants.", "Korrigiere die Szenarioeingabe für den Vergleich.")</p>
+                    }
+                    else
+                    {
+                        @foreach (var variant in Variants)
+                        {
+                            <div class="row" title="@variant.Error">
+                                <button aria-pressed="@(Settings.Tier == variant.Tier)" aria-label="@Format("Select {0} in comparison", "{0} im Vergleich auswählen", TierName(variant.Tier))" @onclick="() => SelectTier(variant.Tier)"><GameIcon Id="@TierIcon(variant.Tier)" Glyph="∅" /></button>
+                                <span>@TierName(variant.Tier)</span>
+                                <span>@(variant.Balance is null ? T("Target throughput unavailable", "Zieldurchsatz nicht erreichbar") : Comparison(variant.Balance, Power))</span>
+                            </div>
+                        }
+                    }
+                </section>
+            </div>
+            <BalancePanel Balance="@Balance" Infrastructure="@Settings.InfrastructureMw" />
+        </div>
+        <footer role="status">@(Status ?? (Failure is null ? T("●  Calculated · steady state", "●  Berechnet · stationärer Betrieb") : T("●  Waiting for valid scenario input", "●  Bilanz wartet auf eine gültige Einstellung")))</footer>
+    }
+</main>
+
+<dialog id="inspector" aria-labelledby="inspector-title" @ondialogcancel="Dismiss">
+    @if (Picker is not null)
+    {
+        <div class="row"><h2 id="inspector-title">@Picker.Title</h2><button type="button" @onclick="Dismiss" aria-label="@T("Cancel", "Abbrechen")">×</button></div>
+        <input id="picker-search" type="search" placeholder="@T("Search", "Suchen")" aria-label="@T("Search", "Suchen")" @bind="Search" @bind:event="oninput" />
+        @foreach (var group in FilteredChoices.GroupBy(choice => choice.Group))
+        {
+            <h3>@group.Key</h3>
+            <div class="picker-grid">
+                @foreach (var choice in group)
+                {
+                    <button title="@choice.Tooltip" aria-pressed="@choice.Selected" disabled="@(!choice.Enabled)" @onclick="() => Choose(choice.Id)">
+                        <GameIcon Id="@choice.Icon" Glyph="@choice.Glyph" />
+                        <span>@choice.Title</span>
+                    </button>
+                }
+            </div>
+        }
+        @if (!FilteredChoices.Any())
+        {
+            <p class="muted">@T("No matches", "Keine Treffer")</p>
+        }
+    }
+    @DialogContent
+</dialog>
+
+@code {
+    private RenderFragment Field(string id, string label, bool disabled = false) =>
+        @<label>@label<input id="@id" type="text" inputmode="decimal" value="@Fields[id]" disabled="@disabled"
+            aria-invalid="@(InvalidField == id)" @oninput="e => EditField(id, e)" @onblur="() => Reformat(id)" /></label>;
+
+    private async Task EditField(string id, ChangeEventArgs args)
+    {
+        Fields[id] = args.Value?.ToString() ?? "";
+        await Update(Settings);
+    }
+
+    private static RenderFragment Chart(string label, decimal value, string tone) =>
+        @<div class="chart"><span>@label</span><progress class="@tone" max="6" value="@Math.Clamp(value, 0m, 6m)" aria-label="@label"></progress><strong>@Power(value) MW</strong></div>;
+
+    private RenderFragment ChainContent => @<text>
+        <section>
+            <details open="@RoutesOpen">
+                <summary @onclick="ToggleRoutes" @onclick:preventDefault>@T("Alternative recipe chains", "Alternative Rezeptketten")</summary>
+                <div role="status">@(Routes is null ? RouteStatus : RouteSummary(Routes))</div>
+                @if (Routes is { } routes)
+                {
+                    @foreach (var (route, index) in routes.Routes.Select((route, index) => (route, index)).Skip(RouteStart).Take(6))
+                    {
+                        <div class="route" @key="route">
+                            <div class="row">
+                                <strong class="@(route.IsCurrent ? "accent" : "")">@(index + 1). @(route.IsCurrent ? T("Active", "Aktiv") : "") @Comparison(route.Balance, Precise)</strong>
+                                @if (!route.IsCurrent)
+                                {
+                                    <button @onclick="() => ApplyRoute(route)">@T("Apply", "Übernehmen")</button>
+                                }
+                            </div>
+                            <small>@(route.Balance.Steps.Count == 0 ? T("No active production steps", "Ohne aktive Produktionsschritte") : string.Join(" · ", route.Balance.Steps.Select(step => Name(step.RecipeId))))</small>
+                            @if (route.Balance.Materials.Any(pair => pair.Value.SuppliedPerMinute > 0m))
+                            {
+                                <small class="warning">@T("External supply chains", "Externe Vorketten") · @string.Join(", ", route.Balance.Materials.Where(pair => pair.Value.SuppliedPerMinute > 0m).Select(pair => Name(pair.Key)))</small>
+                            }
+                        </div>
+                    }
+                    @if (routes.Routes.Count > 6)
+                    {
+                        <div class="actions">
+                            <button disabled="@(RouteStart == 0)" @onclick="() => RouteStart -= 6">@T("Previous", "Zurück")</button>
+                            <button disabled="@(RouteStart + 6 >= routes.Routes.Count)" @onclick="() => RouteStart += 6">@T("More chains", "Weitere Ketten")</button>
+                        </div>
+                    }
+                }
+            </details>
+        </section>
+        <section>
+            <div class="row"><h2>@T("Production chain", "Produktionskette")</h2><small>@(Topology?.Steps.Count ?? 0) @T("STEPS", "SCHRITTE")</small></div>
+            <div class="flow">
+                @Tile(FuelRecipeId ?? Fuel.ItemId, FuelRecipeId is { } fuelRecipe ? Name(fuelRecipe) : T("Supplied", "Bereitgestellt"), T("Recipe / source", "Rezept / Quelle"), Format("Select recipe for {0}", "Rezept für {0} wählen", Name(Fuel.ItemId)), () => ChooseRecipe(Fuel.ItemId, FuelRecipeId))
+                <span aria-hidden="true">›</span>
+                @Tile(Fuel.ItemId, Name(Fuel.ItemId), T("Fuel", "Brennstoff"), FuelTip(Fuel), OpenFuelPicker)
+                <span aria-hidden="true">›</span>
+                <button class="tile" title="@GeneratorTip" @onclick="FocusGenerator"><GameIcon Id="@Fuel.GeneratorIconId" Fallback="false" /><span>@Name(Fuel.GeneratorIconId)<small>@(Balance is null ? T("Power plant", "Kraftwerk") : Format("{0} × installed", "{0} × installiert", Balance.Energy.GeneratorCount))</small></span></button>
+            </div>
+            @if (Topology is null || Topology.Steps.Count == 0)
+            {
+                <p class="muted">@(Failure is null ? T("No production facilities are active in this scenario.", "Für dieses Szenario sind keine Produktionsgebäude aktiv.") : T("Open the recipe node to change the selection.", "Öffne den Rezeptknoten, um die Auswahl zu korrigieren."))</p>
+            }
+            else
+            {
+                @foreach (var (step, index) in Topology.Steps.Select((step, index) => (step, index)))
+                {
+                    var recipe = ProductionCatalog.Recipe(step.RecipeId);
+                    var configured = Settings.Steps.GetValueOrDefault(recipe.Id);
+                    var machine = configured?.MachineId ?? step.MachineId;
+                    var oil = DefaultOilRate(recipe, machine);
+                    var item = PrimaryOutput(recipe);
+                    bool problem = ProblemSteps.Contains(recipe.Id);
+                    <article class="step @(problem ? "problem" : "")" @key="recipe.Id" @oncontextmenu="() => ContextRecipe = recipe.Id" @oncontextmenu:preventDefault>
+                        <div class="step-heading">
+                            <button title="@RecipeTip(recipe)" aria-label="@($"{T("Change recipe", "Rezept ändern")} · {Name(recipe.Id)}")" @onclick="() => ChooseRecipe(item, recipe.Id)"><GameIcon Id="@recipe.Id" /></button>
+                            <div>
+                                <strong>@((index + 1).ToString("00")) @Name(recipe.Id)</strong>
+                                <small>@(problem ? T("Check capacity or settings", "Kapazität oder Einstellung prüfen") : Failure is not null ? T("Calculation pending", "Bilanz ausstehend") : $"{step.MachineCount} × {Name(machine)} · {Percent(step.Utilization)} {T("utilization", "Auslastung")}")</small>
+                                @if (oil is decimal baseRate)
+                                {
+                                    var multiplier = configured?.RateMultiplier ?? 1m;
+                                    <button class="blue oil" title="@T("Edit the current flow per Oil Extractor.", "Aktuelle Förderrate je Ölextraktion einstellen.")" @onclick="() => EditMachine(recipe, machine)">
+                                        @Precise(baseRate * multiplier) @T("Crude Oil/s per extractor", "Rohöl/s je Extraktor") @(multiplier == 1m ? T(" · assumed default", " · Standardannahme") : "") ›
+                                    </button>
+                                }
+                            </div>
+                            <button title="@MachineTip(machine)" aria-label="@($"{T("Select machine", "Maschine wählen")} · {Name(machine)}")" @onclick="() => ChooseMachine(recipe, machine)"><GameIcon Id="@machine" /></button>
+                        </div>
+                        <div class="row">
+                            <div class="actions">
+                                @foreach (var mode in Modes)
+                                {
+                                    var (label, glyph, reason) = SprayChoice(recipe, mode);
+                                    <span title="@(reason ?? label)"><button disabled="@(reason is not null)" aria-label="@label" aria-pressed="@((Settings.Tier is null ? SprayMode.None : configured?.Spray ?? SprayMode.None) == mode)" @onclick="() => ChangeStep(recipe.Id, old => old with { Spray = mode })">@glyph</button></span>
+                                }
+                                <button title="@T("Machine settings", "Maschinenparameter")" aria-label="@T("Machine settings", "Maschinenparameter")" @onclick="() => EditMachine(recipe, machine)">⚙</button>
+                                <button aria-label="@T("Step actions", "Schrittaktionen")" aria-expanded="@(ContextRecipe == recipe.Id)" @onclick="() => ContextRecipe = ContextRecipe == recipe.Id ? null : recipe.Id">⋯</button>
+                            </div>
+                            <strong class="blue">@(Failure is null ? Power(step.WorkingPowerMw + step.IdlePowerMw) : "—") MW</strong>
+                        </div>
+                        @if (ContextRecipe == recipe.Id)
+                        {
+                            <div class="actions step-actions">
+                                <button @onclick="() => ChooseRecipe(item, recipe.Id)">@T("Select recipe or source", "Rezept oder Quelle wählen")</button>
+                                <button @onclick="() => ChooseMachine(recipe, machine)">@T("Select machine", "Maschine wählen")</button>
+                                <button @onclick="() => EditMachine(recipe, machine)">@T("Machine settings", "Maschinenparameter")</button>
+                                <button @onclick="() => ChooseSprayMode(recipe)">@T("Proliferator mode", "Proliferator-Modus")</button>
+                            </div>
+                        }
+                        <details>
+                            <summary>@T("Material flows and machine power", "Stoffflüsse und Maschinenverbrauch")</summary>
+                            @StepMaterials(T("Inputs", "Eingang"), step.InputsPerMinute)
+                            @StepMaterials(oil.HasValue ? T("Outputs · all extractors", "Ausgang · alle Extraktoren") : T("Outputs", "Ausgang"), step.OutputsPerMinute)
+                            @if (Failure is null)
+                            {
+                                <Metric Label="@T("Working power", "Arbeitsleistung")" Value="@(Precise(step.WorkingPowerMw) + " MW")" />
+                                <Metric Label="@T("Idle power", "Leerlauf")" Value="@(Precise(step.IdlePowerMw) + " MW")" />
+                            }
+                        </details>
+                    </article>
+                }
+            }
+            @if (Balance is { } balance)
+            {
+                <details>
+                    <summary>@T("Show material balance", "Stoffbilanz anzeigen")</summary>
+                    @foreach (var (id, amount) in balance.Materials.OrderBy(pair => Name(pair.Key), StringComparer.Create(Culture, true)))
+                    {
+                        bool supplied = amount.SuppliedPerMinute > 0m;
+                        string caption = supplied ? $"{T("Supplied", "Bereitgestellt")} · {Amount(amount.SuppliedPerMinute)} /min" :
+                            $"{Amount(amount.ProducedPerMinute)} {T("produced", "produziert")} · {Amount(amount.SurplusPerMinute)} {T("Surplus", "Überschuss")} /min";
+                        @Tile(id, Name(id), caption, MaterialTip(id, amount), () => ChooseRecipe(id, null), supplied ? "supplied" : "")
+                    }
+                </details>
+            }
+        </section>
+    </text>;
+
+    private RenderFragment StepMaterials(string title, IReadOnlyDictionary<string, decimal> materials) => @<text>
+        @if (materials.Count > 0)
+        {
+            <h3>@title</h3>
+            <div class="actions">
+                @foreach (var (id, amount) in materials)
+                {
+                    string value = Failure is null ? $"{Amount(amount)} /min" : "—";
+                    @Tile(id, Name(id), value, $"{Name(id)} · {value}", () => ChooseRecipe(id, null))
+                }
+            </div>
+        }
+    </text>;
+
+    private RenderFragment Tile(string id, string title, string caption, string tooltip, Action select, string tone = "") =>
+        @<button class="tile @tone" title="@tooltip" @onclick="select"><GameIcon Id="@id" Fallback="false" /><span>@title<small>@caption</small></span></button>;
+
+    private RenderFragment AdvancedControls => @<button @onclick="EditLogistics">@T("Edit logistics costs  ›", "Logistikkosten bearbeiten  ›")</button>;
+
+    private RenderFragment DialogContent => @<text>
+        @if (Machine is not null || EditingLogistics)
+        {
+            <form @onsubmit="ApplyEditor" @onsubmit:preventDefault>
+                @if (Machine is { } machine)
+                {
+                    <small>@T("MACHINE SETTINGS / ", "MASCHINENPARAMETER / ")@Name(machine.Recipe.Id)</small>
+                    <h2 id="inspector-title">@Name(machine.Definition.Id)</h2>
+                    @EditorField("count", T("Machine count · blank = automatic", "Maschinenanzahl · leer = automatisch"))
+                    @EditorField("utilization", T("Maximum utilization (%)", "Maximale Auslastung (%)"))
+                    @if (machine.Oil.HasValue)
+                    {
+                        @EditorField("speed", T("Crude Oil per second per extractor at full utilization", "Rohöl pro Sekunde je Extraktor bei voller Auslastung"))
+                        <p class="muted">@T("Use the current Collecting Speed shown on the Oil Extractor, including Vein Utilization. If your sources differ, enter their average rate.", "Verwende die aktuelle Sammelgeschwindigkeit der Ölextraktion einschließlich Adernutzung. Bei unterschiedlich starken Quellen gib den Mittelwert ein.")</p>
+                    }
+                    else
+                    {
+                        @EditorField("speed", T("Throughput multiplier relative to game value", "Durchsatzfaktor gegenüber Spielwert"))
+                    }
+                    @EditorField("work", $"{T("Working power (MW) · default", "Arbeitsleistung (MW) · Standard")} {Precise(machine.Definition.WorkingPowerMw)}")
+                    @EditorField("idle", $"{T("Idle power (MW) · default", "Leerlaufleistung (MW) · Standard")} {Precise(machine.Definition.IdlePowerMw)}")
+                }
+                else
+                {
+                    <h2 id="inspector-title">@T("Logistics costs", "Logistikkosten")</h2>
+                    <p class="muted">@T("Blank rows are excluded. Enter a count or trip rate of 0 to include an unused category explicitly.", "Leere Zeilen bleiben außerhalb der Bilanz. Setze Anzahl oder Fahrten auf 0, um eine ungenutzte Kategorie ausdrücklich zu erfassen.")</p>
+                    <p class="muted">@T("Any infrastructure total you entered is added separately. Use it for costs outside these four categories.", "Ein eingetragener Infrastrukturwert wird zusätzlich addiert. Erfasse darin nur Kosten außerhalb dieser vier Kategorien.")</p>
+                    @EquipmentEditor("sorters", T("Sorters", "Sorter"))
+                    @EquipmentEditor("stations", T("Logistics Stations", "Logistikstationen"))
+                    <p class="muted">@T("Enter station power separately from vehicle charging. Include the return leg in the energy per round trip.", "Stationsleistung ohne Fahrzeugladung angeben. Die Fahrzeugenergie separat je Umlauf einschließlich Rückweg erfassen.")</p>
+                    @TripsEditor("drones", T("Logistics Drones", "Frachtdrohnen"))
+                    @TripsEditor("vessels", T("Logistics Vessels", "Logistikschiffe"))
+                }
+                @if (EditorError is not null)
+                {
+                    <p role="alert" class="error">@EditorError</p>
+                }
+                <div class="actions dialog-actions">
+                    <button type="button" @onclick="Dismiss">@T("Cancel", "Abbrechen")</button>
+                    <button type="submit">@T("Apply", "Übernehmen")</button>
+                </div>
+            </form>
+        }
+    </text>;
+
+    private RenderFragment EditorField(string id, string label) =>
+        @<label>@label<input id="@("edit-" + id)" type="text" inputmode="decimal" aria-invalid="@(EditorInvalid == id)" @bind="EditorFields[id]" @bind:event="oninput" /></label>;
+
+    private RenderFragment EquipmentEditor(string prefix, string title) => @<fieldset>
+        <legend>@title</legend>
+        <div class="fields">
+            @EditorField(prefix + "-count", T("Count", "Anzahl"))
+            @EditorField(prefix + "-utilization", T("Utilization (%)", "Auslastung (%)"))
+            @EditorField(prefix + "-work", T("Active (kW/unit)", "Aktiv (kW/Stk.)"))
+            @EditorField(prefix + "-idle", T("Idle (kW/unit)", "Leerlauf (kW/Stk.)"))
+        </div>
+    </fieldset>;
+
+    private RenderFragment TripsEditor(string prefix, string title) => @<fieldset>
+        <legend>@title</legend>
+        <div class="fields">
+            @EditorField(prefix + "-rate", T("Round trips/min", "Umläufe/min"))
+            @EditorField(prefix + "-energy", T("kJ/round trip", "kJ/Umlauf"))
+        </div>
+    </fieldset>;
+
+}

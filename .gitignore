@@ -1,0 +1,35 @@
+# .NET build and publish output
+[Bb]in/
+[Oo]bj/
+/artifacts/
+
+# Local IDE settings
+.vs/
+.idea/
+*.user
+*.suo
+*.sln.docstates
+*.pubxml.user
+
+# Test output and generated browser comparison data
+[Tt]est[Rr]esults/
+playwright-report/
+test-results/
+/tests/browser/native-parity.json
+
+# JavaScript dependencies and debug logs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local environment settings (keep example files trackable)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Operating system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini

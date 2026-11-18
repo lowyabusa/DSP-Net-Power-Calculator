@@ -1,0 +1,22 @@
+{
+  "Language": "语言",
+  "Loading scenario…": "正在加载场景…",
+  "In Steam, open Dyson Sphere Program → Manage → Browse local files. Select that installation folder here.": "在 Steam 中打开《戴森球计划》→ 管理 → 浏览本地文件，然后在此处选择该安装文件夹。",
+  "SCENARIO": "场景",
+  "Search": "搜索",
+  "No matches": "未找到匹配项",
+  "Step actions": "工序操作",
+  "Could not save language locally.": "无法在本地保存语言设置。",
+  "Reading game icons …": "正在读取游戏图标…",
+  "No supported icons were found. Choose your Dyson Sphere Program game folder.": "未找到受支持的图标。请选择《戴森球计划》的安装文件夹。",
+  "Icons loaded for this session. Browser storage is unavailable.": "已为本次会话加载图标。浏览器存储不可用。",
+  "{0} game icons loaded.": "已加载 {0} 个游戏图标。",
+  "Could not read game icons. Check the selected DSP installation.": "无法读取游戏图标，请检查所选的游戏安装。",
+  "NET OUTPUT": "净功率",
+  "Gross output": "总发电功率",
+  "Consumption": "耗电功率",
+  "Consumption breakdown": "各类耗电明细",
+  "Generation": "发电",
+  "Steam library": "Steam 库",
+  "Could not save icon settings locally.": "无法在本地保存图标设置。"
+}

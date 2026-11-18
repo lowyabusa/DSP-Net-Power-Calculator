@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../DspNetEnergy.Core/DspNetEnergy.Core.csproj" />
+    <PackageReference Include="AssetsTools.NET" Version="3.0.5" />
+    <Resource Include="Assets/inventory.json;Assets/zh-CN.json" />
+    <EmbeddedResource Include="Assets/AssetsTools.NET.LICENSE.txt" />
+  </ItemGroup>
+</Project>
